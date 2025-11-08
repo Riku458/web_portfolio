@@ -91,6 +91,63 @@ def work_infix_to_postfix():
 
     return render_template('work_infix_to_postfix.html', result=result)
 
+@app.route('/works/queue_dequeue', methods=['GET', 'POST'])
+def work_queue_dequeue():
+    message = ""
+
+    class Node:
+        def __init__(self, data):
+            self.data = data
+            self.next = None
+
+    class Queue:
+        def __init__(self):
+            self.front = None
+            self.rear = None
+
+        def enqueue(self, value):
+            new_node = Node(value)
+            if not self.rear:
+                self.front = self.rear = new_node
+            else:
+                self.rear.next = new_node
+                self.rear = new_node
+
+        def dequeue(self):
+            if not self.front:
+                return None
+            removed = self.front.data
+            self.front = self.front.next
+            if not self.front:
+                self.rear = None
+            return removed
+
+        def get_queue(self):
+            current = self.front
+            items = []
+            while current:
+                items.append(current.data)
+                current = current.next
+            return items
+
+    queue = Queue()
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        value = request.form.get('value', '').strip()
+        if action == 'enqueue' and value:
+            queue.enqueue(value)
+            message = f'Enqueued: {value}'
+        elif action == 'dequeue':
+            removed = queue.dequeue()
+            if removed is None:
+                message = "Queue is empty!"
+            else:
+                message = f'Dequeued: {removed}'
+
+    current_queue = queue.get_queue()
+    return render_template('work_queue_dequeue.html', message=message, queue=current_queue)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
